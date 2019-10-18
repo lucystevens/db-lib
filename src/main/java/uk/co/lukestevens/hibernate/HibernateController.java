@@ -13,7 +13,6 @@ import org.reflections.Reflections;
 
 import uk.co.lukestevens.hibernate.mapping.PersistantFieldMapper;
 import uk.co.lukestevens.config.Config;
-import uk.co.lukestevens.encryption.EncryptionService;
 
 /**
  * A controller to manage the hibernate session factory,
@@ -24,7 +23,6 @@ import uk.co.lukestevens.encryption.EncryptionService;
 public class HibernateController{
 	
 	private final Config config;
-	private final EncryptionService encryption;
 	
 	private SessionFactory factory;
 	private List<PersistantFieldMapper> mappers = new ArrayList<>();
@@ -43,9 +41,8 @@ public class HibernateController{
 	 * @param config The application config to use to configure hibernate
 	 * @param encryption The encryption service to decrypt the database password
 	 */
-	public HibernateController(Config config, EncryptionService encryption) {
+	public HibernateController(Config config) {
 		this.config = config;
-		this.encryption = encryption;
 	}
 
 	/**
@@ -67,7 +64,7 @@ public class HibernateController{
 		}
 		
 		// Decrypt the database password
-		String password = config.getEncrypted(dbAlias + ".db.password", encryption);
+		String password = config.getEncrypted(dbAlias + ".db.password");
 		cfg.setProperty("hibernate.connection.password", password);
 		
 		// Find other optional hibernate configs

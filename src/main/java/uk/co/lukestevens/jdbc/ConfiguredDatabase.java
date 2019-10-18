@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import uk.co.lukestevens.config.Config;
-import uk.co.lukestevens.encryption.EncryptionService;
 
 /**
  * A database implementation using {@link AppConfig}
@@ -23,8 +22,6 @@ public class ConfiguredDatabase extends AbstractDatabase {
 	 * Creates a new configured database from a set of 
 	 * AppConfig properties
 	 * @param config The Config instance
-	 * @param encryption The encryption service used to decrypt the 
-	 * database password
 	 * @param dbAlias an alias used to determine which properties should be 
 	 * fetched for this database. The following properties must be specified:
 	 * <ul>
@@ -34,10 +31,10 @@ public class ConfiguredDatabase extends AbstractDatabase {
 	 * </ul>
 	 * 
 	 */
-	public ConfiguredDatabase(Config config, EncryptionService encryption, String dbAlias) {
+	public ConfiguredDatabase(Config config, String dbAlias) {
 		this.url = config.getAsString(dbAlias + ".db.url");
 		this.username = config.getAsString(dbAlias + ".db.username");
-		this.password = config.getEncrypted(dbAlias + ".db.password", encryption);
+		this.password = config.getEncrypted(dbAlias + ".db.password");
 	}
 
 	@Override
