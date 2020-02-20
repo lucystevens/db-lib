@@ -54,13 +54,19 @@ public class HibernateController{
 	protected SessionFactory buildFactory() throws IOException {
 		String dbAlias = config.getAsStringOrDefault("hibernate.db.alias", "hibernate");
 		
-		String[] props = {"driver_class", "url", "username"};
+		String[] props = {"url", "username"};
 		
 		// Load the mandatory configuration
 		Configuration cfg = new Configuration();
 		for(String property : props) {
 			String value = config.getAsString(dbAlias + ".db." + property);
 			cfg.setProperty("hibernate.connection." + property, value);
+		}
+		
+		// Optional driver class property
+		String driverClass = config.getAsStringOrDefault(dbAlias + ".db.driver_class", null);
+		if(driverClass != null) {
+			cfg.setProperty("hibernate.connection.driver_class", driverClass);
 		}
 		
 		// Decrypt the database password
