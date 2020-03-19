@@ -2,6 +2,7 @@ package uk.co.lukestevens.jdbc;
 
 import java.sql.SQLException;
 
+import uk.co.lukestevens.jdbc.result.DatabaseKey;
 import uk.co.lukestevens.jdbc.result.DatabaseResult;
 
 /**
@@ -27,9 +28,9 @@ public interface Database {
 	 * @param query The SQL query to use
 	 * @param params A variable array of parameters to substitute
 	 * into the SQL query
-	 * @return Either the id of the inserted object or 0 if no appropriate value should be returned
+	 * @return A database key object holding the id of the inserted or updated object
 	 * @throws SQLException If there is an exception querying the database
 	 */
-	public int update(String query, Object...params) throws SQLException;
+	public DatabaseKey update(String query, Object...params) throws SQLException;
 
 }

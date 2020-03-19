@@ -1,7 +1,6 @@
 package uk.co.lukestevens.jdbc.result;
 
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -17,7 +16,7 @@ import java.util.List;
  * 
  * @author luke.stevens
  */
-public class DatabaseResult implements Closeable {
+public class DatabaseResult extends AbstractDatabaseResult {
 	
 	/**
 	 * A functional interface representing an
@@ -32,8 +31,7 @@ public class DatabaseResult implements Closeable {
 		public void execute(ResultSet rs) throws SQLException, IOException;
 	}
 	
-	public Connection con;
-	public ResultSet rs;
+	private final ResultSet rs;
 	
 	/**
 	 * Creates a new DatabaseResult, wrapping
@@ -42,15 +40,8 @@ public class DatabaseResult implements Closeable {
 	 * @param rs the database ResultSet
 	 */
 	public DatabaseResult(Connection con, ResultSet rs) {
-		this.con = con;
+		super(con);
 		this.rs = rs;
-	}
-	
-	/**
-	 * @return The database connection
-	 */
-	public Connection getConnection() {
-		return con;
 	}
 
 	/**
@@ -58,15 +49,6 @@ public class DatabaseResult implements Closeable {
 	 */
 	public ResultSet getResultSet() {
 		return rs;
-	}
-
-	@Override
-	public void close() throws IOException {
-		try {
-			con.close();
-		} catch (SQLException e) {
-			throw new IOException(e);
-		}
 	}
 	
 	/**

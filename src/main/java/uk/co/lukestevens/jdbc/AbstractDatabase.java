@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import uk.co.lukestevens.jdbc.result.DatabaseKey;
 import uk.co.lukestevens.jdbc.result.DatabaseResult;
 
 /**
@@ -56,13 +57,13 @@ public abstract class AbstractDatabase implements Database {
 	}
 
 	@Override
-	public int update(String query, Object...params) throws SQLException {
+	public DatabaseKey update(String query, Object...params) throws SQLException {
 		Connection conn = this.getConnection();
 		PreparedStatement stmt = prepareStatement(conn, query, params);
 		stmt.executeUpdate();
 		
 		ResultSet rs = stmt.getGeneratedKeys();
-		return rs.next()? rs.getInt(1) : 0;
+		return new DatabaseKey(conn, rs.next()? rs.getInt(1) : 0);
 	}
 
 }
