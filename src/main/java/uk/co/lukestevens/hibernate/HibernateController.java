@@ -3,6 +3,8 @@ package uk.co.lukestevens.hibernate;
 import java.io.IOException;
 import java.util.Map.Entry;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.persistence.Entity;
 
 import java.util.ArrayList;
@@ -20,7 +22,8 @@ import uk.co.lukestevens.config.Config;
  * 
  * @author luke.stevens
  */
-public class HibernateController{
+@Singleton
+public class HibernateController implements DaoProvider{
 	
 	private final Config config;
 	
@@ -41,6 +44,7 @@ public class HibernateController{
 	 * @param config The application config to use to configure hibernate
 	 * @param encryption The encryption service to decrypt the database password
 	 */
+	@Inject
 	public HibernateController(Config config) {
 		this.config = config;
 	}
@@ -104,13 +108,8 @@ public class HibernateController{
 		this.mappers.add(mapper);
 	}
 	
-	/**
-	 * Construct a new DAO for a class of object
-	 * @param type The object type to construct the dao for
-	 * @return A new DAO
-	 * @throws IOException If the session factory cannot be built
-	 */
-	public <T> HibernateDao<T> getDao(Class<T> type) throws IOException{
+	@Override
+	public <T> Dao<T> getDao(Class<T> type) throws IOException{
 		return new HibernateDao<>(this.getFactory(), type, mappers);
 	}
 
