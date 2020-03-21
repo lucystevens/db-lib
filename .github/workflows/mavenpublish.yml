@@ -8,6 +8,9 @@ on:
     branches:
     - master
     - develop
+    
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -24,10 +27,6 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B package -s .m2/settings.xml --file pom.xml
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s .m2/settings.xml
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
