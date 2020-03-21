@@ -1,6 +1,7 @@
 package uk.co.lukestevens.hibernate;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map.Entry;
 
 import javax.inject.Inject;
@@ -109,8 +110,12 @@ public class HibernateController implements DaoProvider{
 	}
 	
 	@Override
-	public <T> Dao<T> getDao(Class<T> type) throws IOException{
-		return new HibernateDao<>(this.getFactory(), type, mappers);
+	public <T> Dao<T> getDao(Class<T> type) {
+		try {
+			return new HibernateDao<>(this.getFactory(), type, mappers);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	/**
