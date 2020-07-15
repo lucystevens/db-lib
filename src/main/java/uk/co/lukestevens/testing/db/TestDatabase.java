@@ -1,4 +1,4 @@
-package uk.co.lukestevens.test.db;
+package uk.co.lukestevens.testing.db;
 
 import java.io.BufferedReader;
 import java.io.IOException;
