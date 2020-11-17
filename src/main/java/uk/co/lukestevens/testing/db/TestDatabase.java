@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import uk.co.lukestevens.jdbc.AbstractDatabase;
 
@@ -18,9 +19,13 @@ import uk.co.lukestevens.jdbc.AbstractDatabase;
  */
 public class TestDatabase extends AbstractDatabase {
 	
+	final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE";
+	final String username = "sa";
+	final String password = "";
+	
 	@Override
 	protected Connection getConnection() throws SQLException {
-		return DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE", "sa", "");
+		return DriverManager.getConnection(url, username, password);
 	}
 	
 	/**
@@ -42,5 +47,14 @@ public class TestDatabase extends AbstractDatabase {
 		
 		this.update(sql);
 	}
+	
+	public Properties getProperties() {
+		Properties props = new Properties();
+		props.put("database.url", url);
+		props.put("database.username", username);
+		props.put("database.password", password);
+		return props;
+	}
+
 
 }
