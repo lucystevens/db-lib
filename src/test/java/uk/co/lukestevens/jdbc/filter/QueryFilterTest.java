@@ -1,4 +1,4 @@
-package uk.co.lukestevens.jdbc;
+package uk.co.lukestevens.jdbc.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
