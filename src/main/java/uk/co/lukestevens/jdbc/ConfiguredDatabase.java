@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import javax.inject.Inject;
+
 import uk.co.lukestevens.annotations.SetupConfig;
 import uk.co.lukestevens.config.Config;
 
@@ -15,9 +17,7 @@ import uk.co.lukestevens.config.Config;
  */
 public class ConfiguredDatabase extends AbstractDatabase {
 
-	private final String url;
-	private final String username;
-	private final String password;
+	private final Config config;
 	
 	/**
 	 * Creates a new configured database from a set of 
@@ -30,15 +30,17 @@ public class ConfiguredDatabase extends AbstractDatabase {
 	 * </ul>
 	 * 
 	 */
+	@Inject
 	public ConfiguredDatabase(@SetupConfig Config config) {
-		this.url = config.getAsString("database.url");
-		this.username = config.getAsString("database.url");
-		this.password = config.getAsString("database.url");
+		this.config = config;
 	}
 
 	@Override
 	protected Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(url, username, password);
+		return DriverManager.getConnection(
+				config.getAsString("database.url"), 
+				config.getAsString("database.username"), 
+				config.getAsString("database.password"));
 	}
 
 
