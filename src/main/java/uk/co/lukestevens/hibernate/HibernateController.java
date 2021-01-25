@@ -12,7 +12,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.reflections.Reflections;
 
-import uk.co.lukestevens.annotations.SetupConfig;
 import uk.co.lukestevens.config.ApplicationProperties;
 import uk.co.lukestevens.config.Config;
 
@@ -43,7 +42,7 @@ public class HibernateController implements DaoProvider{
 	 * @param config The config to use to configure hibernate
 	 */
 	@Inject
-	public HibernateController(@SetupConfig Config config, ApplicationProperties appProperties) {
+	public HibernateController(Config config, ApplicationProperties appProperties) {
 		this.config = config;
 		this.appProperties = appProperties;
 	}

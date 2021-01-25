@@ -6,7 +6,6 @@ import java.sql.SQLException;
 
 import javax.inject.Inject;
 
-import uk.co.lukestevens.annotations.SetupConfig;
 import uk.co.lukestevens.config.Config;
 
 /**
@@ -31,7 +30,7 @@ public class ConfiguredDatabase extends AbstractDatabase {
 	 * 
 	 */
 	@Inject
-	public ConfiguredDatabase(@SetupConfig Config config) {
+	public ConfiguredDatabase(Config config) {
 		this.config = config;
 	}
 
