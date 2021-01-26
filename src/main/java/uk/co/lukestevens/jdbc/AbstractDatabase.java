@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.Date;
 
 import uk.co.lukestevens.jdbc.result.DatabaseKey;
 import uk.co.lukestevens.jdbc.result.DatabaseResult;
@@ -43,7 +45,13 @@ public abstract class AbstractDatabase implements Database {
 			if(o != null && o.getClass().isEnum()) {
 				o = o.toString();
 			}
-			stmt.setObject(i + 1, o);
+			
+			if(Date.class.isInstance(o)) {
+				stmt.setObject(i + 1, o, Types.TIMESTAMP);
+			}
+			else {
+				stmt.setObject(i + 1, o);
+			}
 		}
 		return stmt;
 	}
