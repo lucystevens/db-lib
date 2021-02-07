@@ -7,9 +7,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Date;
+import java.util.Optional;
 
-import uk.co.lukestevens.jdbc.result.DatabaseKey;
-import uk.co.lukestevens.jdbc.result.DatabaseResult;
+import uk.co.lukestevens.db.Database;
+import uk.co.lukestevens.db.DatabaseResult;
+import uk.co.lukestevens.jdbc.result.WrappedDatabaseResult;
 
 /**
  * A further implementation of the Database interface
@@ -61,17 +63,19 @@ public abstract class AbstractDatabase implements Database {
 		Connection conn = this.getConnection();
 		PreparedStatement stmt = prepareStatement(conn, query, params);
 		ResultSet rs = stmt.executeQuery();
-		return new DatabaseResult(conn, rs);
+		return new WrappedDatabaseResult(conn, rs);
 	}
 
 	@Override
-	public DatabaseKey update(String query, Object...params) throws SQLException {
+	public Optional<Long> update(String query, Object...params) throws SQLException {
 		Connection conn = this.getConnection();
 		PreparedStatement stmt = prepareStatement(conn, query, params);
 		stmt.executeUpdate();
 		
 		ResultSet rs = stmt.getGeneratedKeys();
-		return new DatabaseKey(conn, rs.next()? rs.getInt(1) : 0);
+		return rs.next()?
+				Optional.of(rs.getLong(1)) :
+				Optional.empty();
 	}
 
 }
