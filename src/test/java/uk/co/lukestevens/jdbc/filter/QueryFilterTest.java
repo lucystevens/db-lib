@@ -1,11 +1,9 @@
-package uk.co.lukestevens.jdbc;
+package uk.co.lukestevens.jdbc.filter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 
 import uk.co.lukestevens.jdbc.filter.QueryFilter;
@@ -28,6 +26,7 @@ public class QueryFilterTest {
 	public static void assertMatches(String expectedRegex, String actual) {
 		assertTrue(actual.matches(expectedRegex), "Expected match but was: <" + actual + ">");
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	@Test

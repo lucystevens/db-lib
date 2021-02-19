@@ -14,12 +14,6 @@ import org.hibernate.Transaction;
  */
 public class CloseableSession implements Closeable {
 	
-	// An interface to defined actions that can be performed on a session
-	@FunctionalInterface
-	public interface SessionOperation {
-		void execute(Session session) throws IOException;
-	}
-	
 	private final Session session;
 	
 	private Transaction tx;

@@ -5,9 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.Date;
+import java.util.Optional;
 
-import uk.co.lukestevens.jdbc.result.DatabaseKey;
-import uk.co.lukestevens.jdbc.result.DatabaseResult;
+import uk.co.lukestevens.db.Database;
+import uk.co.lukestevens.db.DatabaseResult;
+import uk.co.lukestevens.jdbc.result.WrappedDatabaseResult;
 
 /**
  * A further implementation of the Database interface
@@ -43,7 +47,13 @@ public abstract class AbstractDatabase implements Database {
 			if(o != null && o.getClass().isEnum()) {
 				o = o.toString();
 			}
-			stmt.setObject(i + 1, o);
+			
+			if(Date.class.isInstance(o)) {
+				stmt.setObject(i + 1, o, Types.TIMESTAMP);
+			}
+			else {
+				stmt.setObject(i + 1, o);
+			}
 		}
 		return stmt;
 	}
@@ -53,17 +63,20 @@ public abstract class AbstractDatabase implements Database {
 		Connection conn = this.getConnection();
 		PreparedStatement stmt = prepareStatement(conn, query, params);
 		ResultSet rs = stmt.executeQuery();
-		return new DatabaseResult(conn, rs);
+		return new WrappedDatabaseResult(conn, rs);
 	}
 
 	@Override
-	public DatabaseKey update(String query, Object...params) throws SQLException {
-		Connection conn = this.getConnection();
-		PreparedStatement stmt = prepareStatement(conn, query, params);
-		stmt.executeUpdate();
-		
-		ResultSet rs = stmt.getGeneratedKeys();
-		return new DatabaseKey(conn, rs.next()? rs.getInt(1) : 0);
+	public Optional<Long> update(String query, Object...params) throws SQLException {
+		try(Connection conn = this.getConnection()) {
+			PreparedStatement stmt = prepareStatement(conn, query, params);
+			stmt.executeUpdate();
+			
+			ResultSet rs = stmt.getGeneratedKeys();
+			return rs.next()?
+					Optional.of(rs.getLong(1)) :
+					Optional.empty();
+		}
 	}
 
 }

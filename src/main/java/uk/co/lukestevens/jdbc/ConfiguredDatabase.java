@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import javax.inject.Inject;
+
 import uk.co.lukestevens.config.Config;
 
 /**
@@ -14,32 +16,30 @@ import uk.co.lukestevens.config.Config;
  */
 public class ConfiguredDatabase extends AbstractDatabase {
 
-	private final String url;
-	private final String username;
-	private final String password;
+	private final Config config;
 	
 	/**
 	 * Creates a new configured database from a set of 
 	 * AppConfig properties
-	 * @param config The Config instance
-	 * @param dbAlias an alias used to determine which properties should be 
-	 * fetched for this database. The following properties must be specified:
+	 * @param config The Config instance. The following properties must be specified:
 	 * <ul>
-	 * 	<li><code><i>dbAlias</i>.db.url</code></li>
-	 * 	<li><code><i>dbAlias</i>.db.username</code></li>
-	 * 	<li><code><i>dbAlias</i>.db.password</code> (encrypted)</li>
+	 * 	<li><code>database.url</code></li>
+	 * 	<li><code>database.username</code></li>
+	 * 	<li><code>database.password</code></li>
 	 * </ul>
 	 * 
 	 */
-	public ConfiguredDatabase(Config config, String dbAlias) {
-		this.url = config.getAsString(dbAlias + ".db.url");
-		this.username = config.getAsString(dbAlias + ".db.username");
-		this.password = config.getEncrypted(dbAlias + ".db.password");
+	@Inject
+	public ConfiguredDatabase(Config config) {
+		this.config = config;
 	}
 
 	@Override
 	protected Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(url, username, password);
+		return DriverManager.getConnection(
+				config.getAsString("database.url"), 
+				config.getAsString("database.username"), 
+				config.getAsString("database.password"));
 	}
 
 

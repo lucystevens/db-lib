@@ -1,19 +1,19 @@
 package uk.co.lukestevens.hibernate;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.Entity;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.reflections.Reflections;
 
-import uk.co.lukestevens.hibernate.mapping.PersistantFieldMapper;
+import uk.co.lukestevens.config.ApplicationProperties;
 import uk.co.lukestevens.config.Config;
 
 /**
@@ -25,28 +25,27 @@ import uk.co.lukestevens.config.Config;
 @Singleton
 public class HibernateController implements DaoProvider{
 	
-	private final Config config;
+	final Config config;
+	final ApplicationProperties appProperties;
 	
-	private SessionFactory factory;
-	private List<PersistantFieldMapper> mappers = new ArrayList<>();
+	SessionFactory factory;
 
 	/**
 	 * Create a new hibernate controller using the application config.
 	 * Hibernate uses the following properties;
-	 * <ul><li><code>hibernate.db.alias</code> - The alias used to determine the
-	 *         hibernate database properties. Defaults to <i>hibernate</i>.</li>
-	 *     <li><code><i>{alias}</i>.db.driver_class</code> - The driver class to use to connect to the database</li>
-	 *     <li><code><i>{alias}</i>.db.url</code> - The url to use to connect to the database</li>
-	 *     <li><code><i>{alias}</i>.db.username</code> - The username to use to connect to the database</li>
-	 *     <li><code><i>{alias}</i>.db.password</code> - The <i>encrypted</i> password to use to connect to the database</li>
+	 * <ul>
+	 *     <li><code>database.driver_class</code> - The driver class to use to connect to the database (optional)</li>
+	 *     <li><code>database.url</code> - The url to use to connect to the database</li>
+	 *     <li><code>database.username</code> - The username to use to connect to the database</li>
+	 *     <li><code>database.password</code> - The password to use to connect to the database</li>
 	 * </ul>
 	 * The hibernate configuration will also include any other properties that begin with <i>hibernate</i>
-	 * @param config The application config to use to configure hibernate
-	 * @param encryption The encryption service to decrypt the database password
+	 * @param config The config to use to configure hibernate
 	 */
 	@Inject
-	public HibernateController(Config config) {
+	public HibernateController(Config config, ApplicationProperties appProperties) {
 		this.config = config;
+		this.appProperties = appProperties;
 	}
 
 	/**
@@ -55,27 +54,21 @@ public class HibernateController implements DaoProvider{
 	 * @return The constructed session factory
 	 * @throws IOException
 	 */
-	protected SessionFactory buildFactory() throws IOException {
-		String dbAlias = config.getAsStringOrDefault("hibernate.db.alias", "hibernate");
-		
-		String[] props = {"url", "username"};
+	public SessionFactory buildFactory() throws IOException {
+		String[] props = {"url", "username", "password"};
 		
 		// Load the mandatory configuration
-		Configuration cfg = new Configuration();
+		Configuration cfg = createConfiguration();
 		for(String property : props) {
-			String value = config.getAsString(dbAlias + ".db." + property);
+			String value = config.getAsString("database." + property);
 			cfg.setProperty("hibernate.connection." + property, value);
 		}
 		
 		// Optional driver class property
-		String driverClass = config.getAsStringOrDefault(dbAlias + ".db.driver_class", null);
+		String driverClass = config.getAsStringOrDefault("database.driver_class", null);
 		if(driverClass != null) {
 			cfg.setProperty("hibernate.connection.driver_class", driverClass);
 		}
-		
-		// Decrypt the database password
-		String password = config.getEncrypted(dbAlias + ".db.password");
-		cfg.setProperty("hibernate.connection.password", password);
 		
 		// Find other optional hibernate configs
 		for(Entry<Object, Object> property: config.entrySet()) {
@@ -86,11 +79,8 @@ public class HibernateController implements DaoProvider{
 		}
 		
 		// Add all Entity classes
-		String packageName = config.getAsStringOrDefault("app.group", "uk.co.lukestevens");
-		Reflections reflections = new Reflections(packageName);
-		for(Class<?> c : reflections.getTypesAnnotatedWith(Entity.class)) {
-			cfg.addAnnotatedClass(c);
-		}
+		String packageName = appProperties.getApplicationGroup();
+		getEntityClasses(packageName).forEach(cfg::addAnnotatedClass);
 		
 		// Build the session factory
 		this.factory = cfg.buildSessionFactory();
@@ -98,19 +88,29 @@ public class HibernateController implements DaoProvider{
 	}
 	
 	/**
-	 * Register a persistent field mapper to be added to all
-	 * daos constructed by this controller.
-	 * @param mapper A persistent field mapper to do additional mapping
-	 * on certain fields before it is persisted to the database, and after
-	 * it is retrieved.
+	 * @return a new hibernate Configuration object
 	 */
-	public void registerMapper(PersistantFieldMapper mapper) {
-		this.mappers.add(mapper);
+	Configuration createConfiguration() {
+		return new Configuration();
+	}
+	
+	/**
+	 * Get all classes in a package with the {@link Entity} annotation
+	 * @param packageName The name of the package to search
+	 * @return a set of classes
+	 */
+	Set<Class<?>> getEntityClasses(String packageName){
+		Reflections reflections = new Reflections(packageName);
+		return reflections.getTypesAnnotatedWith(Entity.class);
 	}
 	
 	@Override
-	public <T> Dao<T> getDao(Class<T> type) throws IOException{
-		return new HibernateDao<>(this.getFactory(), type, mappers);
+	public <T> Dao<T> getDao(Class<T> type) {
+		try {
+			return new HibernateDao<>(this.getFactory(), type);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	/**
