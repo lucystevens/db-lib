@@ -6,7 +6,7 @@ import java.util.List;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
-import uk.co.lukestevens.hibernate.CloseableSession.SessionOperation;
+import uk.co.lukestevens.hibernate.SessionOperation;
 import uk.co.lukestevens.jdbc.filter.QueryFilter;
 import uk.co.lukestevens.utils.Wrapper;
 
@@ -19,14 +19,13 @@ import uk.co.lukestevens.utils.Wrapper;
  */
 public class HibernateDao<T> implements Dao<T> {
 	
-	private final SessionFactory factory;
-	private final Class<T> type;
+	final SessionFactory factory;
+	final Class<T> type;
 
 	/**
 	 * Creates a new dao. THis should only be called by the HibernateController.
 	 * @param factory The SessionFactory to use to open sessions.
 	 * @param type The type of object this dao should interact with
-	 * @param mappers A list of persistent field mappers to use when persisting and fetching
 	 */
 	protected HibernateDao(SessionFactory factory, Class<T> type) {
 		this.factory = factory;
@@ -65,7 +64,8 @@ public class HibernateDao<T> implements Dao<T> {
 		
 		// Create query
 		try(CloseableSession session = this.openSession()){
-			SessionOperation operation = s -> result.set(s.createQuery(this.getQueryString(), type).list());
+			SessionOperation operation = s -> 
+				result.set(s.createQuery(this.getQueryString(), type).list());
 			session.performOperation(operation);
 		}
 		

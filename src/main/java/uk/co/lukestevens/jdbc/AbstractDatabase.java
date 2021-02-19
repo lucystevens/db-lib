@@ -68,14 +68,15 @@ public abstract class AbstractDatabase implements Database {
 
 	@Override
 	public Optional<Long> update(String query, Object...params) throws SQLException {
-		Connection conn = this.getConnection();
-		PreparedStatement stmt = prepareStatement(conn, query, params);
-		stmt.executeUpdate();
-		
-		ResultSet rs = stmt.getGeneratedKeys();
-		return rs.next()?
-				Optional.of(rs.getLong(1)) :
-				Optional.empty();
+		try(Connection conn = this.getConnection()) {
+			PreparedStatement stmt = prepareStatement(conn, query, params);
+			stmt.executeUpdate();
+			
+			ResultSet rs = stmt.getGeneratedKeys();
+			return rs.next()?
+					Optional.of(rs.getLong(1)) :
+					Optional.empty();
+		}
 	}
 
 }

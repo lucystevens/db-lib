@@ -3,6 +3,7 @@ package uk.co.lukestevens.hibernate;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -53,11 +54,11 @@ public class HibernateController implements DaoProvider{
 	 * @return The constructed session factory
 	 * @throws IOException
 	 */
-	protected SessionFactory buildFactory() throws IOException {
+	public SessionFactory buildFactory() throws IOException {
 		String[] props = {"url", "username", "password"};
 		
 		// Load the mandatory configuration
-		Configuration cfg = new Configuration();
+		Configuration cfg = createConfiguration();
 		for(String property : props) {
 			String value = config.getAsString("database." + property);
 			cfg.setProperty("hibernate.connection." + property, value);
@@ -79,14 +80,28 @@ public class HibernateController implements DaoProvider{
 		
 		// Add all Entity classes
 		String packageName = appProperties.getApplicationGroup();
-		Reflections reflections = new Reflections(packageName);
-		for(Class<?> c : reflections.getTypesAnnotatedWith(Entity.class)) {
-			cfg.addAnnotatedClass(c);
-		}
+		getEntityClasses(packageName).forEach(cfg::addAnnotatedClass);
 		
 		// Build the session factory
 		this.factory = cfg.buildSessionFactory();
 		return factory;
+	}
+	
+	/**
+	 * @return a new hibernate Configuration object
+	 */
+	Configuration createConfiguration() {
+		return new Configuration();
+	}
+	
+	/**
+	 * Get all classes in a package with the {@link Entity} annotation
+	 * @param packageName The name of the package to search
+	 * @return a set of classes
+	 */
+	Set<Class<?>> getEntityClasses(String packageName){
+		Reflections reflections = new Reflections(packageName);
+		return reflections.getTypesAnnotatedWith(Entity.class);
 	}
 	
 	@Override
