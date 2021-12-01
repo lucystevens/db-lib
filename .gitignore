@@ -24,10 +24,13 @@ hs_err_pid*
 /bin/
 /target/
 
-#eclipse files
+#IDE files
 .classpath
 .project
 .settings/
+.idea
 
-# backup pom
-pom.xml.versionsBackup
+# include gradle.jar
+!gradle/wrapper/gradle-wrapper.jar
+.gradle
+build

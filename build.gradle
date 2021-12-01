@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/lukecmstevens/packages")
+        credentials {
+            username = System.getenv("GH_USER")
+            password = System.getenv("GH_TOKEN")
+        }
+    }
+}
+
+dependencies {
+    implementation 'uk.co.lukestevens:base-lib:2.1.0'
+
+    implementation 'org.hibernate:hibernate-core:5.4.2.Final'
+    implementation 'com.zaxxer:HikariCP:5.0.0'
+
+    testImplementation 'com.h2database:h2:1.4.199'
+    testImplementation 'org.mockito:mockito-core:3.6.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.5.2'
+}
+
+group = 'uk.co.lukestevens'
+sourceCompatibility = '11'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+}

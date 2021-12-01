@@ -39,7 +39,7 @@ public class TestAbstractDatabase {
 	@BeforeEach
 	public void setup() throws SQLException {
 		when(database.getConnection()).thenReturn(connection);
-		when(connection.prepareStatement("sql", Statement.RETURN_GENERATED_KEYS))
+		when(connection.prepareStatement("SELECT 1", Statement.RETURN_GENERATED_KEYS))
 			.thenReturn(stmt);
 	}
 	
@@ -48,7 +48,7 @@ public class TestAbstractDatabase {
 	public void testPrepareStatement() throws SQLException, ParseException {
 		Date date = df.parse("2021/02/14 21:05:34");
 		PreparedStatement statement = database
-				.prepareStatement(connection, "sql", 37, TestEnum.ENUM2, "astring", date);
+				.prepareStatement(connection, "SELECT 1", 37, TestEnum.ENUM2, "astring", date);
 		
 		verify(stmt).setObject(1, 37);
 		verify(stmt).setObject(2, "ENUM2");
@@ -59,7 +59,7 @@ public class TestAbstractDatabase {
 	
 	public void testPrepareStatementNoParams() throws SQLException, ParseException {
 		PreparedStatement statement = database
-				.prepareStatement(connection, "sql");
+				.prepareStatement(connection, "SELECT 1");
 		
 		verify(stmt, never()).setObject(any(), any());
 		assertEquals(statement, stmt);
@@ -68,7 +68,7 @@ public class TestAbstractDatabase {
 	@Test
 	public void testQuery() throws SQLException {
 		when(stmt.executeQuery()).thenReturn(rs);
-		DatabaseResult dbr = database.query("sql");
+		DatabaseResult dbr = database.query("SELECT 1");
 		assertEquals(connection, dbr.getConnection());
 		assertEquals(rs, dbr.getResultSet());
 	}
@@ -79,7 +79,7 @@ public class TestAbstractDatabase {
 		when(rs.next()).thenReturn(true);
 		when(rs.getLong(1)).thenReturn(19L);
 		
-		Optional<Long> key = database.update("sql");
+		Optional<Long> key = database.update("SELECT 1");
 		assertEquals(19, key.get());
 		
 		verify(stmt).executeUpdate();
@@ -91,7 +91,7 @@ public class TestAbstractDatabase {
 		when(stmt.getGeneratedKeys()).thenReturn(rs);
 		when(rs.next()).thenReturn(false);
 		
-		Optional<Long> key = database.update("sql");
+		Optional<Long> key = database.update("SELECT 1");
 		assertFalse(key.isPresent());
 		
 		verify(stmt).executeUpdate();
