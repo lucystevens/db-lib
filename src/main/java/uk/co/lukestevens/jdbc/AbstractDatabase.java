@@ -26,7 +26,7 @@ public abstract class AbstractDatabase implements Database {
 	 * @return Gets a connection to the database
 	 * @throws SQLException If a database error occurs
 	 */
-	protected abstract Connection getConnection() throws SQLException;
+	public abstract Connection getConnection() throws SQLException;
 
 	/**
 	 * Prepare a parameterised statement from a raw SQL
@@ -48,7 +48,7 @@ public abstract class AbstractDatabase implements Database {
 				o = o.toString();
 			}
 			
-			if(Date.class.isInstance(o)) {
+			if(o instanceof Date) {
 				stmt.setObject(i + 1, o, Types.TIMESTAMP);
 			}
 			else {

@@ -12,25 +12,22 @@ import java.sql.SQLException;
  */
 public class SimpleDatabase extends AbstractDatabase {
 
-	private final String url;
-	private final String username;
-	private final String password;
+	private final DatabaseCredentials databaseCredentials;
 
 	/**
-	 * Creates a new database instance using the required parameters
-	 * @param url The url of the database
-	 * @param username The username of the user to sue to connect to the database
-	 * @param password The password to connect to the database with
+	 * Creates a new database instance using database credentials
+	 * @param databaseCredentials databaseCredentials
 	 */
-	public SimpleDatabase(String url, String username, String password) {
-		this.url = url;
-		this.username = username;
-		this.password = password;
+	public SimpleDatabase(DatabaseCredentials databaseCredentials) {
+		this.databaseCredentials = databaseCredentials;
 	}
 
 	@Override
-	protected Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(url, username, password);
+	public Connection getConnection() throws SQLException {
+		return DriverManager.getConnection(
+				databaseCredentials.getUrl(),
+				databaseCredentials.getUsername(),
+				databaseCredentials.getPassword());
 	}
 
 }

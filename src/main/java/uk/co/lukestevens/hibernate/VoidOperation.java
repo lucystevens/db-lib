@@ -1,8 +1,8 @@
 package uk.co.lukestevens.hibernate;
 
-import java.io.IOException;
-
 import org.hibernate.Session;
+
+import java.io.IOException;
 
 /**
  * An interface to defined actions that can be performed on a session
@@ -10,8 +10,8 @@ import org.hibernate.Session;
  * @author Luke Stevens
  */
 @FunctionalInterface
-public interface SessionOperation {
+public interface VoidOperation<T> {
 	
-	void execute(Session session) throws IOException;
+	void execute(T arg) throws IOException;
 	
 }

@@ -1,20 +1,16 @@
 package uk.co.lukestevens.hibernate;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.Entity;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.reflections.Reflections;
 
-import uk.co.lukestevens.config.ApplicationProperties;
-import uk.co.lukestevens.config.Config;
+import uk.co.lukestevens.utils.Wrapper;
+
+import java.io.IOException;
 
 /**
  * A controller to manage the hibernate session factory,
@@ -23,12 +19,10 @@ import uk.co.lukestevens.config.Config;
  * @author luke.stevens
  */
 @Singleton
-public class HibernateController implements DaoProvider{
-	
-	final Config config;
-	final ApplicationProperties appProperties;
-	
-	SessionFactory factory;
+public class HibernateController implements DaoProvider, JPAController {
+
+	private final SessionFactory factory;
+	private final ThreadLocal<Session> session = new ThreadLocal<>();
 
 	/**
 	 * Create a new hibernate controller using the application config.
@@ -40,88 +34,72 @@ public class HibernateController implements DaoProvider{
 	 *     <li><code>database.password</code> - The password to use to connect to the database</li>
 	 * </ul>
 	 * The hibernate configuration will also include any other properties that begin with <i>hibernate</i>
-	 * @param config The config to use to configure hibernate
+	 * @param hibernateConfig The config to use to configure hibernate
 	 */
 	@Inject
-	public HibernateController(Config config, ApplicationProperties appProperties) {
-		this.config = config;
-		this.appProperties = appProperties;
+	public HibernateController(HibernateConfig hibernateConfig) {
+		this.factory = hibernateConfig.apply(new Configuration())
+				.buildSessionFactory();
 	}
 
-	/**
-	 * Builds a new session factory using the supplied properties, and scans the classpath
-	 * for entities.
-	 * @return The constructed session factory
-	 * @throws IOException
-	 */
-	public SessionFactory buildFactory() throws IOException {
-		String[] props = {"url", "username", "password"};
-		
-		// Load the mandatory configuration
-		Configuration cfg = createConfiguration();
-		for(String property : props) {
-			String value = config.getAsString("database." + property);
-			cfg.setProperty("hibernate.connection." + property, value);
-		}
-		
-		// Optional driver class property
-		String driverClass = config.getAsStringOrDefault("database.driver_class", null);
-		if(driverClass != null) {
-			cfg.setProperty("hibernate.connection.driver_class", driverClass);
-		}
-		
-		// Find other optional hibernate configs
-		for(Entry<Object, Object> property: config.entrySet()) {
-			String key = property.getKey().toString();
-			if(key.startsWith("hibernate")) {
-				cfg.setProperty(key, property.getValue().toString());
-			}
-		}
-		
-		// Add all Entity classes
-		String packageName = appProperties.getApplicationGroup();
-		getEntityClasses(packageName).forEach(cfg::addAnnotatedClass);
-		
-		// Build the session factory
-		this.factory = cfg.buildSessionFactory();
-		return factory;
-	}
-	
-	/**
-	 * @return a new hibernate Configuration object
-	 */
-	Configuration createConfiguration() {
-		return new Configuration();
-	}
-	
-	/**
-	 * Get all classes in a package with the {@link Entity} annotation
-	 * @param packageName The name of the package to search
-	 * @return a set of classes
-	 */
-	Set<Class<?>> getEntityClasses(String packageName){
-		Reflections reflections = new Reflections(packageName);
-		return reflections.getTypesAnnotatedWith(Entity.class);
-	}
-	
 	@Override
-	public <T> Dao<T> getDao(Class<T> type) {
-		try {
-			return new HibernateDao<>(this.getFactory(), type);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+	public <T> T useSession(ReturningOperation<T, Session> operation) throws IOException {
+		try (Session session = this.getSession()) {
+			return operation.execute(session);
 		}
+	}
+
+	@Override
+	public void useSession(VoidOperation<Session> operation) throws IOException {
+		useSession(session -> {
+			operation.execute(session);
+			return true;
+		});
+	}
+
+	@Override
+	public <T> T useTransaction(ReturningOperation<T, Session> operation) throws IOException {
+		Session session = this.getSession();
+		Transaction tx = session.beginTransaction();
+		Wrapper<T> result = new Wrapper<>();
+		try {
+			result.set(operation.execute(session));
+		} catch (IOException e) {
+			if(tx.isActive()) {
+				tx.rollback();
+			}
+			throw e;
+		}
+		tx.commit();
+		return result.get();
+	}
+
+	@Override
+	public void useTransaction(VoidOperation<Session> operation) throws IOException {
+		useTransaction(session -> {
+			operation.execute(session);
+			return true;
+		});
+	}
+
+	@Override
+	public <T> HibernateDao<T> getDao(Class<T> type){
+		return new HibernateDao<T>(getSession(), type);
+	}
+
+	@Override
+	public Session getSession(){
+		if(session.get() == null){
+			session.set(factory.openSession());
+		}
+		return session.get();
 	}
 
 	/**
 	 * @return The SessionFactory instance managed by this controller,
-	 * or a new instance if none is available.
-	 * @throws IOException If the session factory cannot be built
 	 */
-	public SessionFactory getFactory() throws IOException {
-		if(this.factory == null) {
-			this.buildFactory();
-		}
+	@Override
+	public SessionFactory getFactory() {
 		return this.factory;
 	}
 
