@@ -55,7 +55,7 @@ public class QueryFilter {
 	/**
 	 * Create a query filter that represents an or group
 	 * containing this and another filter 
-	 * @param filterThe filter to OR with this one
+	 * @param filter The filter to OR with this one
 	 * @return A new query filter
 	 */
 	public QueryFilter or(QueryFilter filter) {

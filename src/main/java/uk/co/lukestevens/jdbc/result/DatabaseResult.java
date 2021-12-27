@@ -1,8 +1,5 @@
 package uk.co.lukestevens.jdbc.result;
 
-import uk.co.lukestevens.db.ResultParser;
-import uk.co.lukestevens.db.ResultSetAction;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;

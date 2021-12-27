@@ -1,6 +1,6 @@
 package uk.co.lukestevens.jdbc;
 
-import uk.co.lukestevens.db.DatabaseResult;
+import uk.co.lukestevens.jdbc.result.DatabaseResult;
 
 import java.sql.SQLException;
 import java.util.Optional;

@@ -1,10 +1,9 @@
 package uk.co.lukestevens.hibernate;
 
-import java.io.IOException;
+import uk.co.lukestevens.jdbc.filter.QueryFilter;
+
 import java.util.List;
 import java.util.Optional;
-
-import uk.co.lukestevens.jdbc.filter.QueryFilter;
 
 
 /**
@@ -22,31 +21,31 @@ public interface Dao<T> {
 	 * @return The first object of this type in the database that
 	 * matches the filter criteria, or null if none exist
 	 */
-	public Optional<T> get(QueryFilter filter);
+	Optional<T> get(QueryFilter filter);
 	
 	/**
 	 * @return A list of all objects of this type in the database
 	 */
-	public List<T> list();
+	List<T> list();
 	
 	/**
 	 * @param filter The filter to apply to this query
 	 * @return A list of all objects of this type in the database that
 	 * match the filter criteria.
 	 */
-	public List<T> list(QueryFilter filter);
+	List<T> list(QueryFilter filter);
 	
 	/**
 	 * Saves an object to the database, or updates it if it
 	 * already exists
 	 * @param t The object to save
 	 */
-	public void save(T t);
+	void save(T t);
 	
 	/**
 	 * Deletes an object from the database if it exists
 	 * @param t The object to delete
 	 */
-	public void delete(T t);
+	void delete(T t);
 
 }

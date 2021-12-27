@@ -19,7 +19,7 @@ import java.io.IOException;
  * @author luke.stevens
  */
 @Singleton
-public class HibernateController implements DaoProvider, JPAController {
+public class HibernateController implements JPAController {
 
 	private final SessionFactory factory;
 	private final ThreadLocal<Session> session = new ThreadLocal<>();
@@ -84,7 +84,7 @@ public class HibernateController implements DaoProvider, JPAController {
 
 	@Override
 	public <T> HibernateDao<T> getDao(Class<T> type){
-		return new HibernateDao<T>(getSession(), type);
+		return new HibernateDao<>(getSession(), type);
 	}
 
 	@Override
@@ -95,9 +95,6 @@ public class HibernateController implements DaoProvider, JPAController {
 		return session.get();
 	}
 
-	/**
-	 * @return The SessionFactory instance managed by this controller,
-	 */
 	@Override
 	public SessionFactory getFactory() {
 		return this.factory;

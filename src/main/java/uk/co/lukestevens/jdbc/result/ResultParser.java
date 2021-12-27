@@ -14,5 +14,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface ResultParser<T> {
-	public T parse(ResultSet rs) throws IOException, SQLException;
+	T parse(ResultSet rs) throws IOException, SQLException;
 }

@@ -19,9 +19,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import uk.co.lukestevens.db.DatabaseResult;
+import uk.co.lukestevens.jdbc.result.DatabaseResult;
 
-public class TestAbstractDatabase {
+import javax.sql.DataSource;
+
+public class TestConfiguredDatabase {
 	
 	static enum TestEnum {
 		ENUM1,
@@ -34,11 +36,12 @@ public class TestAbstractDatabase {
 	ResultSet rs = mock(ResultSet.class);
 	PreparedStatement stmt = mock(PreparedStatement.class);
 	Connection connection = mock(Connection.class);
-	AbstractDatabase database = mock(AbstractDatabase.class, CALLS_REAL_METHODS);
+	DataSource dataSource = mock(DataSource.class);
+	ConfiguredDatabase database = new ConfiguredDatabase(dataSource);
 	
 	@BeforeEach
 	public void setup() throws SQLException {
-		when(database.getConnection()).thenReturn(connection);
+		when(dataSource.getConnection()).thenReturn(connection);
 		when(connection.prepareStatement("SELECT 1", Statement.RETURN_GENERATED_KEYS))
 			.thenReturn(stmt);
 	}
@@ -56,8 +59,9 @@ public class TestAbstractDatabase {
 		verify(stmt).setObject(4, date, Types.TIMESTAMP);
 		assertEquals(statement, stmt);
 	}
-	
-	public void testPrepareStatementNoParams() throws SQLException, ParseException {
+
+	@Test
+	public void testPrepareStatementNoParams() throws SQLException {
 		PreparedStatement statement = database
 				.prepareStatement(connection, "SELECT 1");
 		

@@ -58,7 +58,5 @@ public class HibernateDao<T> implements Dao<T> {
 	public void delete(T t) {
 		session.delete(t);
 	}
-	
-	
 
 }

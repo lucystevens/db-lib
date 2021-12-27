@@ -8,9 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.co.lukestevens.db.ResultParser;
-import uk.co.lukestevens.db.ResultSetAction;
-
 /**
  * An ease-of-use wrapper class that encompasses
  * both the result set and connection, allowing for
@@ -19,8 +16,9 @@ import uk.co.lukestevens.db.ResultSetAction;
  * 
  * @author luke.stevens
  */
-public class WrappedDatabaseResult extends AbstractDatabaseResult implements DatabaseResult {
-	
+public class WrappedDatabaseResult implements DatabaseResult {
+
+	private final Connection con;
 	private final ResultSet rs;
 	
 	/**
@@ -30,13 +28,21 @@ public class WrappedDatabaseResult extends AbstractDatabaseResult implements Dat
 	 * @param rs the database ResultSet
 	 */
 	public WrappedDatabaseResult(Connection con, ResultSet rs) {
-		super(con);
+		this.con = con;
 		this.rs = rs;
 	}
 
 	@Override
 	public ResultSet getResultSet() {
 		return rs;
+	}
+
+	/**
+	 * @return The database connection
+	 */
+	@Override
+	public Connection getConnection() {
+		return con;
 	}
 	
 	@Override
@@ -51,6 +57,15 @@ public class WrappedDatabaseResult extends AbstractDatabaseResult implements Dat
 		List<T> list = new ArrayList<>();
 		this.processResultSet(rs -> list.add(parser.parse(rs)));
 		return list;
+	}
+
+	@Override
+	public void close() throws IOException {
+		try {
+			con.close();
+		} catch (SQLException e) {
+			throw new IOException(e);
+		}
 	}
 
 }

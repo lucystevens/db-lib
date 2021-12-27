@@ -14,5 +14,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface ResultSetAction{
-	public void execute(ResultSet rs) throws SQLException, IOException;
+	void execute(ResultSet rs) throws SQLException, IOException;
 }

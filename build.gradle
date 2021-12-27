@@ -17,7 +17,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'uk.co.lukestevens:base-lib:2.1.0'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'uk.co.lukestevens:base-lib:3.0.0-SNAPSHOT'
 
     implementation 'org.hibernate:hibernate-core:5.4.2.Final'
     implementation 'com.zaxxer:HikariCP:5.0.0'
@@ -35,5 +36,75 @@ publishing {
         maven(MavenPublication) {
             from(components.java)
         }
+    }
+}
+
+/**
+ *  Scripts (remove once release-helper is approved via gradle plugin portal)
+ */
+
+task exportProperties {
+    doLast {
+        File githubEnv = new File(System.getenv("GITHUB_ENV"))
+        githubEnv.withWriterAppend { out ->
+            out.println "PROJECT_VERSION=$rootProject.version"
+            out.println "PROJECT_NAME=$rootProject.name"
+        }
+    }
+}
+
+static def setVersion(String newVersion) {
+    File properties = new File("gradle.properties")
+    properties.withWriter {
+        it.println "version=$newVersion"
+    }
+}
+
+static String removeSuffix(String version) {
+    int index = version.indexOf("-")
+    if(index > -1) {
+        version = version.substring(0, index)
+    }
+    return version
+}
+
+task finaliseVersion {
+    doLast {
+        String currentVersion = rootProject.version.toString()
+        String newVersion = removeSuffix(currentVersion)
+        if(currentVersion != newVersion) {
+            setVersion(newVersion)
+        }
+    }
+}
+
+task bumpVersion {
+    doLast {
+        String currentVersion = rootProject.version.toString()
+        String finalVersion = removeSuffix(currentVersion)
+        String[] versionParts = finalVersion.split("\\.")
+        if(versionParts.length < 2){
+            throw new IllegalArgumentException("Version must have at least major and minor identifier")
+        }
+
+        // Add major and minor versions
+        StringBuilder newVersion = new StringBuilder(versionParts[0])
+                .append(".")
+                .append(Integer.parseInt(versionParts[1]) + 1)
+        for(int i = 2; i < versionParts.length; i++){
+            newVersion.append(".0") // zero all other parts
+        }
+        newVersion.append("-SNAPSHOT")
+
+        setVersion(newVersion.toString())
+    }
+}
+
+task generateReadme {
+    doLast {
+        String text = new String(new File("template.README.md").readBytes())
+                .replace("\${PROJECT_NAME}", rootProject.name)
+                .replace("\${PROJECT_VERSION}", rootProject.version.toString())
+        new File("README.md").write(text)
     }
 }

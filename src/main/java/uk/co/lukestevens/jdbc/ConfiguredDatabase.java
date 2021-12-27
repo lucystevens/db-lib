@@ -9,9 +9,10 @@ import java.sql.Types;
 import java.util.Date;
 import java.util.Optional;
 
-import uk.co.lukestevens.db.Database;
-import uk.co.lukestevens.db.DatabaseResult;
+import uk.co.lukestevens.jdbc.result.DatabaseResult;
 import uk.co.lukestevens.jdbc.result.WrappedDatabaseResult;
+
+import javax.sql.DataSource;
 
 /**
  * A further implementation of the Database interface
@@ -20,13 +21,13 @@ import uk.co.lukestevens.jdbc.result.WrappedDatabaseResult;
  * 
  * @author luke.stevens
  */
-public abstract class AbstractDatabase implements Database {
-	
-	/**
-	 * @return Gets a connection to the database
-	 * @throws SQLException If a database error occurs
-	 */
-	public abstract Connection getConnection() throws SQLException;
+public class ConfiguredDatabase implements Database {
+
+	private final DataSource dataSource;
+
+	public ConfiguredDatabase(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
 
 	/**
 	 * Prepare a parameterised statement from a raw SQL
@@ -60,7 +61,7 @@ public abstract class AbstractDatabase implements Database {
 
 	@Override
 	public DatabaseResult query(String query, Object...params) throws SQLException {
-		Connection conn = this.getConnection();
+		Connection conn = dataSource.getConnection();
 		PreparedStatement stmt = prepareStatement(conn, query, params);
 		ResultSet rs = stmt.executeQuery();
 		return new WrappedDatabaseResult(conn, rs);
@@ -68,7 +69,7 @@ public abstract class AbstractDatabase implements Database {
 
 	@Override
 	public Optional<Long> update(String query, Object...params) throws SQLException {
-		try(Connection conn = this.getConnection()) {
+		try(Connection conn = dataSource.getConnection()) {
 			PreparedStatement stmt = prepareStatement(conn, query, params);
 			stmt.executeUpdate();
 			

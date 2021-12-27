@@ -1,13 +1,9 @@
 package uk.co.lukestevens.jdbc;
 
-import uk.co.lukestevens.jdbc.AbstractDatabase;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import javax.sql.DataSource;
 
 /**
  * A class to store database credentials
@@ -42,6 +38,14 @@ public class DatabaseCredentials {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public DataSource asDataSource(){
+		HikariDataSource dataSource = new HikariDataSource();
+		dataSource.setUsername(username);
+		dataSource.setPassword(password);
+		dataSource.setJdbcUrl(url);
+		return dataSource;
 	}
 
 }
