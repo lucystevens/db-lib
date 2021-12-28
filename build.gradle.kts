@@ -2,6 +2,7 @@ plugins {
     java
     `maven-publish`
     kotlin("jvm") version "1.6.0"
+    id("uk.co.lukestevens.plugins.release-helper") version "0.1.0"
 }
 
 fun RepositoryHandler.githubPackages() = maven {
@@ -51,62 +52,6 @@ publishing {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-}
-
-
-
-/**
- *  Scripts (remove once release-helper is approved via gradle plugin portal)
- */
-
-tasks.register("exportProperties") {
-    doLast {
-        File(System.getenv("GITHUB_ENV")).bufferedWriter().use {
-            it.appendln("PROJECT_VERSION=${project.version}")
-            it.appendln("PROJECT_NAME=${project.name}")
-        }
-    }
-}
-
-fun writeVersion(newVersion: String) {
-    File(projectDir, "gradle.properties")
-        .bufferedWriter().use {
-            it.appendln("version=$newVersion")
-        }
-}
-
-fun removeSuffix(version: String): String = version.substringBefore("-")
-
-tasks.register("finaliseVersion") {
-    doLast {
-        val currentVersion = project.version.toString()
-        val newVersion = removeSuffix(currentVersion)
-        if(currentVersion != newVersion) {
-            writeVersion(newVersion)
-        }
-    }
-}
-
-tasks.register("bumpVersion") {
-    doLast {
-        val currentVersion = project.version.toString()
-        val finalVersion = removeSuffix(currentVersion)
-        val versionParts = finalVersion.split(".")
-        if(versionParts.size < 2){
-            throw IllegalArgumentException("Version must have at least major and minor identifier")
-        }
-
-        // Add major and minor versions
-        val newVersion = StringBuilder(versionParts[0])
-            .append(".")
-            .append(Integer.parseInt(versionParts[1]) + 1)
-        for(i in 2 until versionParts.size){
-            newVersion.append(".0") // zero all other parts
-        }
-        newVersion.append("-SNAPSHOT")
-
-        writeVersion(newVersion.toString())
-    }
 }
 
 tasks.register("generateReadme") {
