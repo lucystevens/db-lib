@@ -8,13 +8,13 @@ package uk.co.lukestevens.jdbc.filter
  */
 object QueryFilters {
     /**
-     * Creates a QueryFilterBuilder of the given column
+     * Creates a FilterColumn of the given column
      * @param column The column to filter against
-     * @return A QueryFilterBuilder, used to build a QueryFilter
+     * @return A FilterColumn, used to build a QueryFilter
      */
 	@JvmStatic
-	fun column(column: String): QueryFilterBuilder {
-        return QueryFilterBuilder(column)
+	fun column(column: String): FilterColumn {
+        return FilterColumn(column)
     }
 
     /**
@@ -25,7 +25,18 @@ object QueryFilters {
      */
 	@JvmStatic
 	fun and(vararg filters: QueryFilter): QueryFilter {
-        return group("AND", *filters)
+        return group("AND", filters.toList())
+    }
+
+    /**
+     * Combine multiple QueryFilters in an AND group to
+     * create a new filter
+     * @param filters Filters that should have all criteria evaluated as true
+     * @return A QueryFilter representing the AND of all the given filters
+     */
+    @JvmStatic
+    fun and(filters: List<QueryFilter>): QueryFilter {
+        return group("AND", filters)
     }
 
     /**
@@ -36,7 +47,18 @@ object QueryFilters {
      */
 	@JvmStatic
 	fun or(vararg filters: QueryFilter): QueryFilter {
-        return group("OR", *filters)
+        return group("OR", filters.toList())
+    }
+
+    /**
+     * Combine multiple QueryFilters in an OR group to
+     * create a new filter
+     * @param filters Filters that should have at least one criteria evaluated as true
+     * @return A QueryFilter representing the OR of all the given filters
+     */
+    @JvmStatic
+    fun or(filters: List<QueryFilter>): QueryFilter {
+        return group("OR", filters)
     }
 
     /**
@@ -45,7 +67,7 @@ object QueryFilters {
      * @param filters The filter to combine
      * @return A QueryFilter representing the combination of the given filters
      */
-    private fun group(operator: String, vararg filters: QueryFilter): QueryFilter {
+    private fun group(operator: String, filters: List<QueryFilter>): QueryFilter {
         val params = mutableMapOf<String, Any>()
         for (filter in filters) {
             params.putAll(filter.params)

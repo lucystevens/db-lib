@@ -1,12 +1,5 @@
 package uk.co.lukestevens.jdbc.filter
 
-import kotlin.jvm.JvmOverloads
-import uk.co.lukestevens.jdbc.filter.QueryFilter
-import uk.co.lukestevens.jdbc.filter.QueryFilters
-import uk.co.lukestevens.jdbc.filter.QueryFilterBuilder
-import java.util.*
-import java.util.stream.Collectors
-
 /**
  * A class representing a parameterised SQL query filter
  * to be applied in the WHERE clause

@@ -1,13 +1,12 @@
 package jdbc.filter
 
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import uk.co.lukestevens.jdbc.filter.QueryFilter
 import uk.co.lukestevens.jdbc.filter.QueryFilters.and
 import uk.co.lukestevens.jdbc.filter.QueryFilters.column
 import uk.co.lukestevens.jdbc.filter.QueryFilters.or
-import java.util.*
 
 class QueryFilterTest {
     private fun getParamValue(filter: QueryFilter, index: Int): Any {
@@ -22,18 +21,24 @@ class QueryFilterTest {
     }
 
     @Test
-    fun testSimpleFilter() {
-        val equalsFilter = column("name").isEqualTo("test")
+    fun testEqualsFilter() {
+        val equalsFilter = column("name") isEqualTo "test"
         assertMatches("name = :[a-zA-z]+", equalsFilter.sql)
         assertEquals(1, equalsFilter.params.size)
         assertEquals("test", getParamValue(equalsFilter, 0))
+    }
 
-        val greaterThanFilter = column("value").isGreaterThan(12)
+    @Test
+    fun testGreaterThanFilter() {
+        val greaterThanFilter = column("value") isGreaterThan 12
         assertMatches("value > :[a-zA-z]+", greaterThanFilter.sql)
         assertEquals(1, greaterThanFilter.params.size)
         assertEquals(12, getParamValue(greaterThanFilter, 0))
+    }
 
-        val inFilter = column("site").isIn("mailer", "dashboard", "auth")
+    @Test
+    fun testInFilter() {
+        val inFilter = column("site") isIn listOf("mailer", "dashboard", "auth")
         assertMatches("site IN \\(:[a-zA-z]+\\)", inFilter.sql)
 
         val params = getParamValue(inFilter, 0) as List<*>
@@ -44,18 +49,25 @@ class QueryFilterTest {
     }
 
     @Test
-    fun testFilterGroup() {
-        val equalsFilter = column("name").isEqualTo("test")
-        val greaterThanFilter = column("value").isGreaterThan(12)
-        val andFilter = and(equalsFilter, greaterThanFilter)
+    fun testAndFilter() {
+        val andFilter = and(
+            column("name") isEqualTo "test",
+            column("value") isGreaterThan 12
+        )
 
         assertMatches("\\(name = :[a-zA-z]+ AND value > :[a-zA-z]+\\)", andFilter.sql)
         assertEquals(2, andFilter.params.size)
         assertEquals("test", getParamValue(andFilter, 0))
         assertEquals(12, getParamValue(andFilter, 1))
+    }
 
-        val inFilter = column("site").isIn("mailer", "dashboard", "auth")
-        val orFilter = or(equalsFilter, inFilter, greaterThanFilter)
+    @Test
+    fun testOrFilter() {
+        val orFilter = or(
+            column("name") isEqualTo "test",
+            column("site") isIn listOf("mailer", "dashboard", "auth"),
+            column("value") isGreaterThan 12,
+        )
         assertMatches(
             "\\(name = :[a-zA-z]+ OR site IN \\(:[a-zA-z]+\\) OR value > :[a-zA-z]+\\)",
             orFilter.sql
@@ -72,18 +84,22 @@ class QueryFilterTest {
 
     @Test
     fun testComplexFilter() {
-        val equalsFilter = column("name").isEqualTo("test")
-        val greaterThanFilter = column("value").isGreaterThan(12)
-        val andFilter = and(equalsFilter, greaterThanFilter)
-        val inFilter = column("site").isIn("mailer", "dashboard", "auth")
-        val notNullFilter = column("key").isNotNull
-        val andFilter2 = and(inFilter, notNullFilter)
-        val lessThanFilter = column("count").isLessThanOrEqualTo(4)
-        val complexFilter = or(andFilter, andFilter2, lessThanFilter)
+        val complexFilter = or(
+            and(
+                column("name") isEqualTo "test",
+                column("value") isGreaterThan 12
+            ),
+            and(
+                column("char") isIn listOf("a", "b", "c"),
+                column("key").isNotNull
+            ),
+            column("count") isLessThanOrEqualTo 4
+        )
+
 
         assertMatches(
             "\\(\\(name = :[a-zA-z]+ AND value > :[a-zA-z]+\\) OR "
-                    + "\\(site IN \\(:[a-zA-z]+\\) AND key IS NOT NULL\\) OR "
+                    + "\\(char IN \\(:[a-zA-z]+\\) AND key IS NOT NULL\\) OR "
                     + "count <= :[a-zA-z]+\\)",
             complexFilter.sql
         )
@@ -91,29 +107,38 @@ class QueryFilterTest {
         assertEquals("test", getParamValue(complexFilter, 0))
         assertEquals(12, getParamValue(complexFilter, 1))
         val params = getParamValue(complexFilter, 2) as List<*>
-        assertEquals("mailer", params[0])
-        assertEquals("dashboard", params[1])
-        assertEquals("auth", params[2])
+        assertEquals("a", params[0])
+        assertEquals("b", params[1])
+        assertEquals("c", params[2])
         assertEquals(4, getParamValue(complexFilter, 3))
     }
 
     @Test
-    fun testEmptyVarargs() {
-        val inFilter = column("site").isIn()
+    fun testEmptyInFilter() {
+        val inFilter = column("site") isIn listOf()
         assertMatches("site IN \\(:[a-zA-z]+\\)", inFilter.sql)
         assertEquals(1, inFilter.params.size)
 
         val params = getParamValue(inFilter, 0) as List<*>
-        Assertions.assertTrue(params.isEmpty())
+        assertTrue(params.isEmpty())
+    }
 
+    @Test
+    fun testEmptyOrFilter() {
         val emptyOrFilter = or()
         assertEquals("", emptyOrFilter.sql)
         assertEquals(0, emptyOrFilter.params.size)
+    }
 
-        val equalsFilter = column("name").isEqualTo("test")
-        val greaterThanFilter = column("value").isGreaterThan(12)
-        val orFilter = or(equalsFilter, greaterThanFilter)
-        val andFilter = and(emptyOrFilter, orFilter)
+    @Test
+    fun testComplexFilterWithEmptyFilters() {
+        val andFilter = and(
+            or(),
+            or(
+                column("name") isEqualTo "test" ,
+                column("value") isGreaterThan 12
+            )
+        )
         assertMatches("\\(name = :[a-zA-z]+ OR value > :[a-zA-z]+\\)", andFilter.sql)
         assertEquals(2, andFilter.params.size)
         assertEquals("test", getParamValue(andFilter, 0))
@@ -122,7 +147,7 @@ class QueryFilterTest {
 
     companion object {
         fun assertMatches(expectedRegex: String, actual: String) {
-            Assertions.assertTrue(actual.matches(Regex(expectedRegex)), "Expected to match $expectedRegex but was: <$actual>")
+            assertTrue(actual.matches(Regex(expectedRegex)), "Expected to match $expectedRegex but was: <$actual>")
         }
     }
 }
