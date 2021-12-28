@@ -26,8 +26,7 @@ dependencies {
     implementation("org.hibernate:hibernate-core:5.4.2.Final")
     implementation("com.zaxxer:HikariCP:5.0.0")
 
-    testImplementation("com.h2database:h2:1.4.199")
-    testImplementation("org.mockito:mockito-core:3.6.0")
+    testImplementation("io.mockk:mockk:1.12.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 }
 
@@ -47,6 +46,14 @@ publishing {
         githubPackages()
     }
 }
+
+
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+}
+
+
 
 /**
  *  Scripts (remove once release-helper is approved via gradle plugin portal)
